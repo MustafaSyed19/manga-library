@@ -1,4 +1,7 @@
 const axios = require("axios");
+const JSZip = require("jszip");
+const fs = require('fs');
+const { url } = require("inspector");
 
 const BASEURL = "https://api.mangadex.org";
 const IMAGEURL = "https://uploads.mangadex.org/data/";
@@ -74,6 +77,8 @@ const mangaInfo = async (mangaID) => {
   }
 };
 
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 /*Download manga chapters, this is probs gonna be the meat of the code*/
 const downloadChapters = async (mangaID, mangaTitle) => {
   //fetch all chapter ids
@@ -102,14 +107,11 @@ const downloadChapters = async (mangaID, mangaTitle) => {
     console.log("A problem occured when fetching chapters " + error);
   }
 
-  let x =0; 
+  let x = 1;
   //fetch all images based on chapter ids
-  //TODO: i need to use some sort of timeout function so I don't get the rate limited 
-  //status code 429 
   for (const chapterNo in chapterIDs) {
     if (chapterIDs.hasOwnProperty(chapterNo)) {
       const chapterID = chapterIDs[chapterNo].id; // Assuming the ID is in the first element of the array
-
       try {
         const response = await axios({
           method: "GET",
@@ -121,23 +123,48 @@ const downloadChapters = async (mangaID, mangaTitle) => {
           hash: path.hash,
           data: path.data,
         };
-        if(x++ == 10)
-        {
-            break
-        }
       } catch (error) {
         console.log("A problem occurred when fetching chapter pages:", error);
       }
+      console.log(`chapter ${chapterNo} downloaded`);
+      await delay(2000)
+    }
+  }  
+
+
+
+  for (const entry in chapterImages) {
+
+    //generate link for image
+    hash = chapterImages[entry].hash;
+    data = chapterImages[entry].data;  
+    const zip = new JSZip();  
+    for(let x = 0; x < data.length; x++)
+    {       
+      let url = `${IMAGEURL}${hash}/${data[x]}`
+      try
+      {
+        await axios.get(url, {responseType:'arraybuffer'})
+        .then(response =>
+        {
+          const imageData = response.data; 
+          console.log(`Chapter ${entry}-${x}`);
+          
+          zip.file(`Chapter ${entry}-${x}`,imageData); 
+        }
+        )
+      }
+      catch(error)
+      {
+        console.log(error);
+      }
+    }
+    try {
+      const content = await zip.generateAsync({ type: 'nodebuffer' });
+      fs.writeFileSync('theClimber.cbz', content);
+      console.log('Zip file created successfully!');
+    } catch (error) {
+      console.error('Error generating zip file:', error);
     }
   }
-  //Todo images to comic book archive format : ) 
-};
-
-(async () => {
-  console.log(
-    await downloadChapters(
-      "bb8310e4-6050-4a43-984e-f7bbdfce23b1",
-      "kokou no hitou"
-    )
-  );
-})();
+}
