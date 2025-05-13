@@ -9,11 +9,11 @@ const pool = new Pool({
 
 // User Registration
 const register = async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password} = req.body;
 
   try {
     // Check if the username already exists
-      const userCheck = await pool.query('SELECT * FROM ACCOUNT WHERE Username=$1', [username]);
+    const userCheck = await pool.query('SELECT * FROM ACCOUNT WHERE Username=$1', [username]);
     if (userCheck.rowCount > 0) {
       return res.status(400).json({ error: "Username: ${username} already taken"});
     }
@@ -35,10 +35,10 @@ const register = async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    res.status(201).json({ message: "User registered successfully", token });
+    return res.status(201).json({ message: "User registered successfully", token,username });
   } catch(err) {
     console.error(err); // For debugging purposes
-    res.status(500).json({ error: "Something went wrong during registration." });
+    return res.status(500).json({ error: "Something went wrong during registration." });
   }
 };
 
@@ -71,17 +71,18 @@ const login = async (req, res) => {
     );
 
     // Send the token to the client
-    res.status(200).json({ message: "Login successful", token });
+    return res.status(200).json({ message: "Login successful", token, username });
   } catch (error) {
     console.error(error); // For debugging purposes
-    res.status(500).json({ error: "Something went wrong during login" });
+    return res.status(500).json({ error: "Something went wrong during login" });
   }
 };
 
 // User Logout (Clear JWT token)
 const logout = (req, res) => {
   res.clearCookie('token'); // Clear the token cookie
-  res.status(200).json({ message: 'Logged out successfully' });
+  return res.status(200).json({ message: 'Logged out successfully' });
 };
+
 
 module.exports = { register, login, logout };

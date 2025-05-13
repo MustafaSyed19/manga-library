@@ -6,10 +6,12 @@ const { url } = require("inspector");
 
 const BASEURL = "https://api.mangadex.org";
 const IMAGEURL = "https://uploads.mangadex.org/data/";
+const COVERURL = "https://uploads.mangadex.org/covers/";
 
 
 /*for each search we need to get the mangaID, coverImage*/
-const searchManga = async (mangaTitle) => {
+const searchManga = async (req,res) => {
+  const {mangaTitle} = req.body;
   try {
     const response = await axios({
       method: "GET",
@@ -23,75 +25,96 @@ const searchManga = async (mangaTitle) => {
     // Ensure data exists
     if (!response.data?.data || !Array.isArray(response.data.data)) {
       console.error("Invalid API response:", response.data);
-      return [];
+      return res.status(404).json({ error: "Invalid API response" });
     }
 
 
     let mangaList = response.data.data;
     const mangas = mangaList.map((manga) => ({
-      mangaid: manga.id,
+      mangaID: manga.id,
       coverArtid: manga.relationships.find((rel) => rel.type === "cover_art")
         ?.id,
     }));
-    return mangas;
+    return res.status(200).json(mangas)
   } catch (error) {
     console.log(error);
-    return [];
+    return res.status(500).json({ error: "An error occurred while searching for manga." });
   }
 };
 
 
-/*this returns mangaInfo in the case the user clicks on a manga title including author, status,
-chapters, title and description*/
-const mangaInfo = async (mangaID) => {
+const mangaInfo = async (req, res) => {
+  const { mangaID, coverArtid } = req.body;
+
+  let manga;
+  let author = "unknown";
+
+  // Fetch manga info
   try {
-    const response = await axios({
-      method: "GET",
-      url: `${BASEURL}/manga/${mangaID}`,
-    });
-
-
-    let manga = response.data?.data;
-
+    const response = await axios.get(`${BASEURL}/manga/${mangaID}`);
+    manga = response.data?.data;
 
     if (!manga || !manga.attributes) {
       console.error("Invalid manga data:", response.data);
-      return null;
+      return res.status(404).json({ error: "Manga not found" });
     }
-
-
-    let authorID = manga.relationships.find((rel) => rel.type === "artist")?.id;
-    let author = "unknown";
-    if (authorID) {
-      const authorquery = await axios({
-        method: "GET",
-        url: `${BASEURL}/author/${authorID}`,
-      });
-      author = authorquery.data?.data?.attributes?.name || "unknown";
-    }
-
-
-    const mangaInfo = {
-      title: manga.attributes.title?.en || "Untitled",
-      author: author,
-      status: manga.attributes.status || "Unknown",
-      chapters: manga.attributes.lastChapter || "Unknown",
-      description:
-        manga.attributes.description?.en || "No description available",
-    };
-    return mangaInfo;
   } catch (error) {
-    console.log(error);
-    return [];
+    console.log("A problem occurred when fetching manga info:", error);
+    return res.status(500).json({ error: "An error occurred while fetching manga info." });
   }
+
+  // Fetch artist info
+  try {
+    const artistRel = manga.relationships.find(
+      (rel) => rel.type === "author" && rel.role === "artist"
+    );
+    const authorID = artistRel?.id;
+
+    if (authorID) {
+      const authorQuery = await axios.get(`${BASEURL}/author/${authorID}`);
+      author = authorQuery.data?.data?.attributes?.name || "unknown";
+    }
+  } catch (error) {
+    console.log("A problem occurred when fetching author info:", error);
+    return res.status(500).json({ error: "An error occurred while fetching author info." });
+  }
+  let fileURL = '';
+  try
+  {
+      const response = await axios.get(`${BASEURL}/cover/${coverArtid}`); 
+      const fileName = response.data?.data?.attributes?.fileName;
+      fileURL = `${COVERURL}${mangaID}/${fileName}`;
+  }
+  catch(error)
+  { 
+      console.log("A problem occurred when fetching cover image:", error);
+      return res.status(500).json({ error: "An error occurred while fetching cover image." });
+  }
+
+  // Build response
+  const mangaInfo = {
+    id: mangaID,
+    coverArtid: coverArtid,
+    title: manga.attributes.title?.en || "Untitled",
+    author: author,
+    status: manga.attributes.status || "Unknown",
+    chapters: manga.attributes.lastChapter || "Unknown",
+    description: manga.attributes.description?.en || "No description available",
+    coverImageUrl: fileURL
+  };
+
+  return res.status(200).json(mangaInfo);
 };
+
 
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 
 /*Download manga chapters, this is probs gonna be the meat of the code*/
-const downloadChapters = async (mangaID, mangaTitle) => {
+const downloadChapters = async (req,res) => {
+
+  const {mangaID, mangaTitle} = req.body;
   //fetch all chapter ids
   const chapterIDs = {};
   let chapterImages = {};
@@ -120,6 +143,7 @@ const downloadChapters = async (mangaID, mangaTitle) => {
     });
   } catch (error) {
     console.log("A problem occured when fetching chapters " + error);
+    return res.status(500).json({ error: "An error occurred while fetching chapters." });
   }
   x=0
  
@@ -141,6 +165,7 @@ const downloadChapters = async (mangaID, mangaTitle) => {
         };
       } catch (error) {
         console.log("A problem occurred when fetching chapter pages:", error);
+        return res.status(500).json({ error: "An error occurred while fetching chapter pages." });
       }
       console.log(`chapter ${chapterNo} downloaded`);
       await delay(2000)
@@ -186,35 +211,70 @@ const downloadChapters = async (mangaID, mangaTitle) => {
   } catch (error) {
     console.error('Error generating zip file:', error);
   }
-
-
 }
 
+// const coverImage = async (req,res) => 
+// { 
+//   const {mangaID, coverArtid} = req.body;
+//   try
+//   { 
+//       const response = await axios.get(`${BASEURL}/cover/${coverArtid}`); 
+//       const fileName = response.data?.data?.attributes?.fileName;
+//       const fileURL = `${COVERURL}${mangaID}/${fileName}`;
+//       return res.status(200).json(fileURL);
+      
+//   }
+//   catch(error)
+//   { 
+//       console.log("A problem occurred when fetching cover image:", error);
+//       return res.status(500).json({ error: "An error occurred while fetching cover image." });
+//   }
+// }
 
-//personal code for me to download without the web app + tester :)
-const main = async () => {
-  const mangaTitle = "dorohedoro";
-  const mangas = await searchManga(mangaTitle);
- 
-  //print all the options
-  for(let x =0; x < mangas.length; x++)
-  {
-    let info = await mangaInfo(mangas[x].mangaid)
-    console.log(`${x+1}. ${info.title}`);
-  }
-
-
-  //make a selection goofy js doesnt have a proper input method so always assume first result is correct
-  let selection = 1;
-  let info = await mangaInfo(mangas[selection-1].mangaid)
-  console.log(`You have selected ${selection}. ${info.title}`);
-
-
-  //download the chapters to your local drive
-  console.log(await downloadChapters(mangas[selection-1].mangaid,info.title));
+module.exports = {  
+  searchManga,
+  mangaInfo,
+  downloadChapters,
 };
 
 
-main();
+
+//personal code for me to download without the web app + tester :)
+// const main = async () => {
+//   const mangaTitle = "dorohedoro";
+//   const mangas = await searchManga(mangaTitle);
+ 
+//   //print all the options
+//   for(let x =0; x < mangas.length; x++)
+//   {
+//     let info = await mangaInfo(mangas[x].mangaid,mangas[x].coverArtid)
+//     console.log(info);
+    
+//     console.log(`${x+1}. ${info.title}`);
+//   }
+
+
+//   //make a selection goofy js doesnt have a proper input method so always assume first result is correct
+//   let selection = 1;
+//   let info = await mangaInfo(mangas[selection-1].mangaid)
+//   console.log(`You have selected ${selection}. ${info.title}`);
+
+
+//   //download the chapters to your local drive
+//   console.log(await downloadChapters(mangas[selection-1].mangaid,info.title));
+// };
+
+// const tester = async () => {
+//   const mangaTitle = "dorohedoro";
+//   const mangas = await searchManga(mangaTitle);
+//   console.log(mangas.length);
+//   const fileName = await coverImage(mangas[0].mangaid,mangas[0].coverArtid);
+//   console.log(fileName);
+  
+// } 
+
+
+// tester();
+// main();
 
 
