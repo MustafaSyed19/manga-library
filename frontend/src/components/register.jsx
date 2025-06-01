@@ -1,11 +1,14 @@
 import React, { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import axios from "axios";
-import "./register.css";
+import './../styles/register.css';
+
 const Register = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+    const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,6 +28,8 @@ const Register = () => {
       localStorage.setItem("authToken", token);
 
       console.log("Registration Successful " + user);
+      navigate('/home');
+
     } catch (err) {
       setError(err.response?.data?.message || "Registration Failed");
     }
@@ -32,9 +37,9 @@ const Register = () => {
   return (
     <div className="registration-container">
       <h1>Registration</h1>
-      <form onSubmit={handleSubmit} class="registration-form">
-        <div class="username">
-          <label for="name">Username:</label>
+      <form onSubmit={handleSubmit} className="registration-form">
+        <div className="username">
+          <label htmlFor="name">Username:</label>
           <input
             id="name"
             type="text"
@@ -43,8 +48,8 @@ const Register = () => {
             required
           />
         </div>
-        <div class="password">
-            <label for="password">Password:</label>
+        <div className="password">
+            <label htmlFor="password">Password:</label>
             <input
             id="password"
             type="password"
@@ -53,8 +58,8 @@ const Register = () => {
             required
           />
         </div>
-        <div class="confirmPassword">
-            <label for="confirmPassword">Confirm Password:</label>
+        <div className="confirmPassword">
+            <label htmlFor="confirmPassword">Confirm Password:</label>
             <input
             id="confirmPassword"
             type="password"

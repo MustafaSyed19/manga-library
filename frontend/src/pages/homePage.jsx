@@ -1,13 +1,15 @@
-import React, {useState} from "react";
 import SearchBar from "../components/searchBar";
+import History from './../components/history';
+import SavedManga from './../components/savedMangas';
+import './../styles/homepage.css';
 const HomePage = () => 
 { 
     return (
-        <>
-            <SearchBar></SearchBar>
-            {/* <SavedManga></SavedManga>
-            <History></History> */}
-        </>
+            <div className="bg">
+                <SearchBar></SearchBar>
+                <History></History>
+                <SavedManga></SavedManga>
+            </div>
     );
 }
 export default HomePage;

@@ -9,15 +9,16 @@ const IMAGEURL = "https://uploads.mangadex.org/data/";
 const COVERURL = "https://uploads.mangadex.org/covers/";
 
 
-/*for each search we need to get the mangaID, coverImage*/
+/*for each search we need to get the mangadexid, coverImage*/
 const searchManga = async (req,res) => {
-  const {mangaTitle} = req.body;
+  const {title} = req.body;  
   try {
     const response = await axios({
       method: "GET",
       url: `${BASEURL}/manga`,
       params: {
-        title: mangaTitle,
+        title: title,
+        limit:50
       },
     });
 
@@ -31,8 +32,8 @@ const searchManga = async (req,res) => {
 
     let mangaList = response.data.data;
     const mangas = mangaList.map((manga) => ({
-      mangaID: manga.id,
-      coverArtid: manga.relationships.find((rel) => rel.type === "cover_art")
+      mangadexid: manga.id,
+      coverartid: manga.relationships.find((rel) => rel.type === "cover_art")
         ?.id,
     }));
     return res.status(200).json(mangas)
@@ -44,14 +45,15 @@ const searchManga = async (req,res) => {
 
 
 const mangaInfo = async (req, res) => {
-  const { mangaID, coverArtid } = req.body;
-
+  const { mangadexid, coverartid } = req.body;
+  console.log(mangadexid, coverartid);
+  
   let manga;
   let author = "unknown";
 
   // Fetch manga info
   try {
-    const response = await axios.get(`${BASEURL}/manga/${mangaID}`);
+    const response = await axios.get(`${BASEURL}/manga/${mangadexid}`);    
     manga = response.data?.data;
 
     if (!manga || !manga.attributes) {
@@ -59,15 +61,16 @@ const mangaInfo = async (req, res) => {
       return res.status(404).json({ error: "Manga not found" });
     }
   } catch (error) {
-    console.log("A problem occurred when fetching manga info:", error);
+    // console.log("A problem occurred when fetching manga info:", error);
     return res.status(500).json({ error: "An error occurred while fetching manga info." });
   }
 
   // Fetch artist info
   try {
     const artistRel = manga.relationships.find(
-      (rel) => rel.type === "author" && rel.role === "artist"
+      (rel) => rel.type === "artist"
     );
+    
     const authorID = artistRel?.id;
 
     if (authorID) {
@@ -75,15 +78,15 @@ const mangaInfo = async (req, res) => {
       author = authorQuery.data?.data?.attributes?.name || "unknown";
     }
   } catch (error) {
-    console.log("A problem occurred when fetching author info:", error);
+    // console.log("A problem occurred when fetching author info:", error);
     return res.status(500).json({ error: "An error occurred while fetching author info." });
   }
   let fileURL = '';
   try
   {
-      const response = await axios.get(`${BASEURL}/cover/${coverArtid}`); 
+      const response = await axios.get(`${BASEURL}/cover/${coverartid}`); 
       const fileName = response.data?.data?.attributes?.fileName;
-      fileURL = `${COVERURL}${mangaID}/${fileName}`;
+      fileURL = `${COVERURL}${mangadexid}/${fileName}`;
   }
   catch(error)
   { 
@@ -92,15 +95,17 @@ const mangaInfo = async (req, res) => {
   }
 
   // Build response
+  //have to proxy url to a different link 
+  
   const mangaInfo = {
-    id: mangaID,
-    coverArtid: coverArtid,
+    mangadexid: mangadexid,
+    coverartid: coverartid,
     title: manga.attributes.title?.en || "Untitled",
     author: author,
     status: manga.attributes.status || "Unknown",
-    chapters: manga.attributes.lastChapter || "Unknown",
+    chapters: manga.attributes.lastChapter || 0,
     description: manga.attributes.description?.en || "No description available",
-    coverImageUrl: fileURL
+    coverimageurl: fileURL
   };
 
   return res.status(200).json(mangaInfo);
@@ -111,116 +116,101 @@ const mangaInfo = async (req, res) => {
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 
-/*Download manga chapters, this is probs gonna be the meat of the code*/
-const downloadChapters = async (req,res) => {
-
-  const {mangaID, mangaTitle} = req.body;
-  //fetch all chapter ids
+const returnChapterMap = async (req, res) => {
+  const { mangadexid } = req.body;
   const chapterIDs = {};
   let chapterImages = {};
-
 
   try {
     const response = await axios({
       method: "GET",
-      url: `${BASEURL}/manga/${mangaID}/feed?limit=500&translatedLanguage%5B%5D=en&contentRating%5B%5D=safe&contentRating%5B%5D=suggestive&contentRating%5B%5D=erotica&includeFutureUpdates=1&order%5BcreatedAt%5D=asc&order%5BupdatedAt%5D=asc&order%5BpublishAt%5D=asc&order%5BreadableAt%5D=asc&order%5Bvolume%5D=asc&order%5Bchapter%5D=asc`,
+      url: `${BASEURL}/manga/${mangadexid}/feed?limit=500&translatedLanguage%5B%5D=en&contentRating%5B%5D=safe&contentRating%5B%5D=suggestive&contentRating%5B%5D=erotica&includeFutureUpdates=1&order%5BcreatedAt%5D=asc&order%5BupdatedAt%5D=asc&order%5BpublishAt%5D=asc&order%5BreadableAt%5D=asc&order%5Bvolume%5D=asc&order%5Bchapter%5D=asc`,
     });
 
-
-    chapterResponse = response.data.data;
-
-
+    const chapterResponse = response.data.data;
     chapterResponse.forEach((manga) => {
       const chapterNo = manga.attributes.chapter;
       const id = manga.id;
-
-
       if (!chapterIDs[chapterNo]) {
-        chapterIDs[chapterNo] = {
-          id: [id],
-        };
+        chapterIDs[chapterNo] = { id: [id] };
       }
     });
   } catch (error) {
-    console.log("A problem occured when fetching chapters " + error);
-    return res.status(500).json({ error: "An error occurred while fetching chapters." });
+    console.log("Error fetching chapters:", error);
+    return res.status(500).json({ error: "Error fetching chapters." });
   }
-  x=0
- 
-  //fetch all images based on chapter ids
-  for (const chapterNo in chapterIDs) {
-    if (chapterIDs.hasOwnProperty(chapterNo)) {
-      const chapterID = chapterIDs[chapterNo].id; // Assuming the ID is in the first element of the array
+  const sortedChapterIDs = Object.keys(chapterIDs)
+  .sort((a, b) => parseFloat(a) - parseFloat(b));
+
+
+  return res.status(200).json({sortedChapterIDs,chapterIDs});
+}
+
+const downloadChapters = async (req, res) => {
+  const {chapterMap,chapterIDs} = req.body;  
+  let chapterImages = {};
+
+  for (let x=0; x< chapterMap.length; x++) {
+    let chapterNo = chapterMap[x];
+        const chapterID = chapterIDs[chapterNo]?.id[0];
+      
       try {
-        const response = await axios({
-          method: "GET",
-          url: `${BASEURL}/at-home/server/${chapterID}`,
-        });
+        const response = await axios.get(`${BASEURL}/at-home/server/${chapterID}`);
         const path = response.data.chapter;
-
-
-        chapterImages[chapterNo] = {
-          hash: path.hash,
-          data: path.data,
-        };
+        chapterImages[chapterNo] = { hash: path.hash, data: path.data };
       } catch (error) {
-        console.log("A problem occurred when fetching chapter pages:", error);
-        return res.status(500).json({ error: "An error occurred while fetching chapter pages." });
+        console.log("Error fetching chapter pages:", error);
+        return res.status(500).json({ error: "Error fetching chapter pages." });
       }
       console.log(`chapter ${chapterNo} downloaded`);
-      await delay(2000)
+      await delay(2000);
     }
-    if(x++ == 10)
-    {
-      break;
-    }
-  }  
 
 
+  
 
-
-  const zip = new JSZip();  
+  const zip = new JSZip();
   for (const entry in chapterImages) {
-    //generate link for image
-    hash = chapterImages[entry].hash;
-    data = chapterImages[entry].data;  
-    for(let x = 0; x < data.length; x++)
-    {      
-      let url = `${IMAGEURL}${hash}/${data[x]}`
-      try
-      {        
-        await axios.get(url, {responseType:'arraybuffer'})
-        .then(response =>
-        {
-          const imageData = response.data;
-          console.log(`Chapter ${entry}-${x}`);      
-          zip.file(`Chapter ${entry}-${x}.${url.split('.').pop()}`,imageData);
-        }
-        )
-      }
-      catch(error)
-      {
-        console.log(error);
+    const hash = chapterImages[entry].hash;
+    const data = chapterImages[entry].data;
+    for (let i = 0; i < data.length; i++) {
+      const url = `${IMAGEURL}${hash}/${data[i]}`;
+      try {
+        const response = await axios.get(url, { responseType: 'arraybuffer' });
+        const imageData = response.data;
+        zip.file(`Chapter ${entry}-${i}.${url.split('.').pop()}`, imageData);
+        console.log(`Chapter ${entry}-${i}`);
+      } catch (error) {
+        console.log("Error downloading image:", error);
       }
     }
   }
+
   try {
     const content = await zip.generateAsync({ type: 'nodebuffer' });
-    fs.writeFileSync(`${mangaTitle}.cbz`, content);
-    console.log('Zip file created successfully!');
+    // Just return the zip buffer instead of writing to disk
+    res.set({
+      'Content-Type': 'application/zip',
+      'Content-Disposition': 'attachment; filename="chapters.zip"',
+      'Content-Length': content.length,
+    });
+    return res.send(content);
   } catch (error) {
-    console.error('Error generating zip file:', error);
+    console.error("Error generating zip file:", error);
+    return res.status(500).json({ error: "Failed to create ZIP file." });
   }
-}
+};  
+
+
 
 // const coverImage = async (req,res) => 
 // { 
-//   const {mangaID, coverArtid} = req.body;
+//   const {mangadexid, coverartid} = req.body;
 //   try
 //   { 
-//       const response = await axios.get(`${BASEURL}/cover/${coverArtid}`); 
+//       const response = await axios.get(`${BASEURL}/cover/${coverartid}`); 
 //       const fileName = response.data?.data?.attributes?.fileName;
-//       const fileURL = `${COVERURL}${mangaID}/${fileName}`;
+//       const fileURL = `${COVERURL}${mangadexid}/${fileName}`;
 //       return res.status(200).json(fileURL);
       
 //   }
@@ -231,23 +221,25 @@ const downloadChapters = async (req,res) => {
 //   }
 // }
 
+
 module.exports = {  
   searchManga,
   mangaInfo,
   downloadChapters,
+  returnChapterMap
 };
 
 
 
 //personal code for me to download without the web app + tester :)
 // const main = async () => {
-//   const mangaTitle = "dorohedoro";
-//   const mangas = await searchManga(mangaTitle);
+//   const title = "dorohedoro";
+//   const mangas = await searchManga(title);
  
 //   //print all the options
 //   for(let x =0; x < mangas.length; x++)
 //   {
-//     let info = await mangaInfo(mangas[x].mangaid,mangas[x].coverArtid)
+//     let info = await mangaInfo(mangas[x].mangadexid,mangas[x].coverartid)
 //     console.log(info);
     
 //     console.log(`${x+1}. ${info.title}`);
@@ -256,19 +248,19 @@ module.exports = {
 
 //   //make a selection goofy js doesnt have a proper input method so always assume first result is correct
 //   let selection = 1;
-//   let info = await mangaInfo(mangas[selection-1].mangaid)
+//   let info = await mangaInfo(mangas[selection-1].mangadexid)
 //   console.log(`You have selected ${selection}. ${info.title}`);
 
 
 //   //download the chapters to your local drive
-//   console.log(await downloadChapters(mangas[selection-1].mangaid,info.title));
+//   console.log(await downloadChapters(mangas[selection-1].mangadexid,info.title));
 // };
 
 // const tester = async () => {
-//   const mangaTitle = "dorohedoro";
-//   const mangas = await searchManga(mangaTitle);
+//   const title = "dorohedoro";
+//   const mangas = await searchManga(title);
 //   console.log(mangas.length);
-//   const fileName = await coverImage(mangas[0].mangaid,mangas[0].coverArtid);
+//   const fileName = await coverImage(mangas[0].mangadexid,mangas[0].coverartid);
 //   console.log(fileName);
   
 // } 

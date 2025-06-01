@@ -1,0 +1,606 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+.manga-info {
+    width: 85%;
+    max-width: 1200px;
+    display: grid;
+    margin: 0 auto;
+    margin-top: 30px;
+    margin-bottom: 60px;
+    grid-template-columns: 300px 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 50px;
+    padding: 60px;
+    
+    /* Light theme - Green, pastel, white */
+    background: linear-gradient(135deg, rgba(220, 255, 220, 0.9) 0%, rgba(240, 255, 240, 0.8) 100%);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    border: 1px solid rgba(144, 238, 144, 0.4);
+    box-shadow: 
+        0 20px 40px rgba(34, 139, 34, 0.1),
+        0 8px 32px rgba(60, 179, 113, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    
+    /* Subtle animation */
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    color: #2F4F2F;
+}
+
+.title-row, .info-text {
+    font-family: 'Inter', sans-serif;
+}
+
+.manga-info::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(144, 238, 144, 0.3), transparent);
+    transition: left 0.8s ease;
+}
+
+.manga-info:hover::before {
+    left: 100%;
+}
+
+.manga-info:hover {
+    transform: translateY(-4px);
+    box-shadow: 
+        0 32px 64px rgba(34, 139, 34, 0.15),
+        0 16px 48px rgba(60, 179, 113, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.manga-info * {
+    margin: 0;
+}
+
+.title-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    grid-row: 1/2;
+    grid-column: 2/3;
+    gap: 20px;
+    
+    /* Light theme glass effect */
+    background: rgba(240, 255, 240, 0.7);
+    backdrop-filter: blur(8px);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid rgba(144, 238, 144, 0.3);
+    
+    /* Subtle glow */
+    box-shadow: 
+        0 8px 24px rgba(60, 179, 113, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.manga-cover {
+    grid-column: 1/2;
+    grid-row: 1/3;
+    position: relative;
+    
+    /* Enhanced cover styling */
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 
+        0 24px 48px rgba(34, 139, 34, 0.2),
+        0 12px 24px rgba(60, 179, 113, 0.15);
+    
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.manga-cover::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        rgba(144, 238, 144, 0.2) 0%, 
+        transparent 50%, 
+        rgba(34, 139, 34, 0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.manga-cover:hover::after {
+    opacity: 1;
+}
+
+.manga-cover:hover {
+    transform: scale(1.10) rotateY(1deg);
+    box-shadow: 
+        0 32px 64px rgba(34, 139, 34, 0.25),
+        0 16px 32px rgba(60, 179, 113, 0.2);
+}
+
+.manga-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    transition: transform 0.3s ease;
+}
+
+.info-text {
+    grid-column: 2/3;
+    grid-row: 2/3;
+    /* Content styling */
+    background: rgba(248, 255, 248, 0.8);
+    backdrop-filter: blur(6px);
+    border-radius: 20px;
+    padding: 32px;
+    border: 1px solid rgba(144, 238, 144, 0.2);
+    
+    /* Typography enhancement */
+    line-height: 2;
+    
+    /* Subtle inner glow */
+    box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 8px 24px rgba(60, 179, 113, 0.08);
+    
+    /* Smooth scrolling if content overflows */
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(60, 179, 113, 0.4) transparent;
+}
+
+.info-text::-webkit-scrollbar {
+    width: 6px;
+}
+
+.info-text::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.info-text::-webkit-scrollbar-thumb {
+    background: rgba(60, 179, 113, 0.4);
+    border-radius: 3px;
+}
+
+.info-text::-webkit-scrollbar-thumb:hover {
+    background: rgba(60, 179, 113, 0.6);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .manga-info {
+        width: 95%;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        gap: 30px;
+        padding: 30px;
+        margin-top: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .title-row {
+        grid-row: 2/3;
+        grid-column: 1/2;
+        flex-direction: column;
+        text-align: center;
+        gap: 16px;
+    }
+    
+    .manga-cover {
+        grid-column: 1/2;
+        grid-row: 1/2;
+        max-width: 250px;
+        margin: 0 auto;
+    }
+    
+    .info-text {
+        grid-column: 1/2;
+        grid-row: 3/4;
+    }
+}
+
+/* Enhanced title styling */
+.title-row h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #228B22 0%, #32CD32 50%, #90EE90 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+    text-shadow: 0 4px 8px rgba(34, 139, 34, 0.1);
+    flex: 1;
+    text-align: left;
+}
+
+/* Save/Bookmark Button Styles - Light Theme */
+.saved-button, .unsaved-button {
+    border: none;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+    min-height: 50px;
+    position: relative;
+    overflow: hidden;
+}
+
+.saved-button {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: #8B4513;
+    box-shadow: 
+        0 6px 20px rgba(255, 215, 0, 0.4),
+        0 3px 10px rgba(255, 165, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transform: scale(1);
+}
+
+.saved-button:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 
+        0 12px 30px rgba(255, 215, 0, 0.5),
+        0 6px 20px rgba(255, 165, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    background: linear-gradient(135deg, #FFF700 0%, #FFB347 100%);
+}
+
+.saved-button:active {
+    transform: translateY(-1px) scale(1.02);
+}
+
+.unsaved-button {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 248, 248, 0.8) 100%);
+    color: #666;
+    border: 2px solid rgba(144, 238, 144, 0.3);
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.unsaved-button:hover {
+    transform: translateY(-2px) scale(1.05);
+    background: linear-gradient(135deg, #F0F8F0 0%, #E8F8E8 100%);
+    color: #4A7C59;
+    border-color: rgba(144, 238, 144, 0.5);
+    box-shadow: 
+        0 8px 20px rgba(76, 175, 80, 0.2),
+        0 4px 15px rgba(144, 238, 144, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.unsaved-button:active {
+    transform: translateY(-1px) scale(1.02);
+}
+
+/* Pulse animation for save state changes */
+.saved-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulse-save 0.6s ease-out;
+}
+
+@keyframes pulse-save {
+    to {
+        width: 100px;
+        height: 100px;
+        opacity: 0;
+    }
+}
+
+/* Chapter download section styling */
+.chapter_download {
+    width: 85%;
+    max-width: 1200px;
+    margin: 0 auto;
+    margin-bottom: 60px;
+    padding: 40px;
+    color: #2F4F2F;
+    
+    background: linear-gradient(135deg, rgba(240, 255, 240, 0.9) 0%, rgba(248, 255, 248, 0.8) 100%);
+    backdrop-filter: blur(8px);
+    border-radius: 20px;
+    border: 1px solid rgba(144, 238, 144, 0.3);
+    box-shadow: 0 16px 32px rgba(60, 179, 113, 0.1);
+    
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    align-items: start;
+}
+
+.chapter_download > button:first-child {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #32CD32 0%, #98FB98 100%);
+    border: none;
+    border-radius: 12px;
+    padding: 16px 32px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2F4F2F;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 16px rgba(50, 205, 50, 0.3);
+    margin-bottom: 20px;
+    justify-self: center;
+}
+
+.chapter_download > button:first-child:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(50, 205, 50, 0.4);
+    background: linear-gradient(135deg, #228B22 0%, #32CD32 100%);
+    color: white;
+}
+
+.chapter_download > button[type="submit"] {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #20B2AA 0%, #66CDAA 100%);
+    border: none;
+    border-radius: 12px;
+    padding: 18px 40px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px rgba(32, 178, 170, 0.3);
+    margin-top: 20px;
+    justify-self: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.chapter_download > button[type="submit"]:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px rgba(32, 178, 170, 0.4);
+    background: linear-gradient(135deg, #008B8B 0%, #20B2AA 100%);
+}
+
+/* Chapter checkbox styling */
+.chapter_download > div {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(248, 255, 248, 0.6);
+    border-radius: 10px;
+    border: 1px solid rgba(144, 238, 144, 0.2);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.chapter_download > div:hover {
+    background: rgba(240, 255, 240, 0.8);
+    border-color: rgba(144, 238, 144, 0.4);
+    transform: translateY(-1px);
+}
+
+.chapter_radio {
+    width: 18px;
+    height: 18px;
+    accent-color: #32CD32;
+    cursor: pointer;
+}
+
+.chapter_text {
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+    flex: 1;
+}
+
+/* Page container */
+.manga-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, 
+        #E0FFE0 0%, 
+        #F0FFF0 25%, 
+        #F5FFFA 50%, 
+        #E6FFE6 75%, 
+        #DDFEDD 100%);
+    padding: 20px 0;
+    position: relative;
+}
+
+.manga-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(144, 238, 144, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(152, 251, 152, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(173, 255, 173, 0.2) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+/* Dark theme - Red, grey, black */
+@media (prefers-color-scheme: dark) {
+    .manga-info {
+        background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(20, 20, 20, 0.9) 100%);
+        border: 1px solid rgba(139, 69, 69, 0.4);
+        color: #E5E5E5;
+        box-shadow: 
+            0 20px 40px rgba(139, 0, 0, 0.2),
+            0 8px 32px rgba(178, 34, 34, 0.15),
+            inset 0 1px 0 rgba(139, 69, 69, 0.3);
+    }
+    
+    .manga-info::before {
+        background: linear-gradient(90deg, transparent, rgba(139, 69, 69, 0.3), transparent);
+    }
+    
+    .manga-info:hover {
+        box-shadow: 
+            0 32px 64px rgba(139, 0, 0, 0.25),
+            0 16px 48px rgba(178, 34, 34, 0.2),
+            inset 0 1px 0 rgba(139, 69, 69, 0.4);
+    }
+    
+    .title-row {
+        background: rgba(30, 30, 30, 0.9);
+        border: 1px solid rgba(139, 69, 69, 0.3);
+        color: #E5E5E5;
+        box-shadow: 
+            0 8px 24px rgba(139, 0, 0, 0.2),
+            inset 0 1px 0 rgba(139, 69, 69, 0.4);
+    }
+    
+    .title-row h1 {
+        background: linear-gradient(135deg, #DC143C 0%, #B22222 50%, #8B0000 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 4px 8px rgba(139, 0, 0, 0.3);
+    }
+    
+    /* Dark theme save button styles */
+    .saved-button {
+        background: linear-gradient(135deg, #FF6347 0%, #DC143C 100%);
+        color: white;
+        box-shadow: 
+            0 6px 20px rgba(220, 20, 60, 0.4),
+            0 3px 10px rgba(255, 99, 71, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+    
+    .saved-button:hover {
+        background: linear-gradient(135deg, #FF4500 0%, #FF1493 100%);
+        box-shadow: 
+            0 12px 30px rgba(255, 20, 147, 0.5),
+            0 6px 20px rgba(255, 69, 0, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    
+    .unsaved-button {
+        background: linear-gradient(135deg, rgba(60, 60, 60, 0.9) 0%, rgba(40, 40, 40, 0.8) 100%);
+        color: #CCCCCC;
+        border: 2px solid rgba(139, 69, 69, 0.3);
+        box-shadow: 
+            0 4px 12px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(139, 69, 69, 0.2);
+    }
+    
+    .unsaved-button:hover {
+        background: linear-gradient(135deg, #4A4A4A 0%, #5A5A5A 100%);
+        color: #FF6B6B;
+        border-color: rgba(220, 20, 60, 0.5);
+        box-shadow: 
+            0 8px 20px rgba(220, 20, 60, 0.3),
+            0 4px 15px rgba(139, 69, 69, 0.4),
+            inset 0 1px 0 rgba(139, 69, 69, 0.3);
+    }
+    
+    .info-text {
+        background: rgba(25, 25, 25, 0.9);
+        border: 1px solid rgba(139, 69, 69, 0.2);
+        color: #E5E5E5;
+        box-shadow: 
+            inset 0 1px 0 rgba(139, 69, 69, 0.3),
+            0 8px 24px rgba(139, 0, 0, 0.15);
+    }
+    
+    .info-text::-webkit-scrollbar-thumb {
+        background: rgba(139, 69, 69, 0.5);
+    }
+    
+    .info-text::-webkit-scrollbar-thumb:hover {
+        background: rgba(139, 69, 69, 0.7);
+    }
+    
+    .manga-cover {
+        box-shadow: 
+            0 24px 48px rgba(139, 0, 0, 0.3),
+            0 12px 24px rgba(178, 34, 34, 0.2);
+    }
+    
+    .manga-cover::after {
+        background: linear-gradient(135deg, 
+            rgba(139, 69, 69, 0.2) 0%, 
+            transparent 50%, 
+            rgba(139, 0, 0, 0.2) 100%);
+    }
+    
+    .manga-cover:hover {
+        box-shadow: 
+            0 32px 64px rgba(139, 0, 0, 0.4),
+            0 16px 32px rgba(178, 34, 34, 0.3);
+    }
+    
+    .chapter_download {
+        background: linear-gradient(135deg, rgba(35, 35, 35, 0.95) 0%, rgba(25, 25, 25, 0.9) 100%);
+        border: 1px solid rgba(139, 69, 69, 0.3);
+        color: #E5E5E5;
+        box-shadow: 0 16px 32px rgba(139, 0, 0, 0.2);
+    }
+    
+    .chapter_download > button:first-child {
+        background: linear-gradient(135deg, #B22222 0%, #8B0000 100%);
+        color: white;
+        box-shadow: 0 6px 16px rgba(178, 34, 34, 0.4);
+    }
+    
+    .chapter_download > button:first-child:hover {
+        background: linear-gradient(135deg, #DC143C 0%, #B22222 100%);
+        box-shadow: 0 12px 24px rgba(220, 20, 60, 0.5);
+    }
+    
+    .chapter_download > button[type="submit"] {
+        background: linear-gradient(135deg, #696969 0%, #2F4F4F 100%);
+        color: white;
+        box-shadow: 0 8px 20px rgba(105, 105, 105, 0.4);
+    }
+    
+    .chapter_download > button[type="submit"]:hover {
+        background: linear-gradient(135deg, #778899 0%, #696969 100%);
+        box-shadow: 0 16px 32px rgba(119, 136, 153, 0.5);
+    }
+    
+    .chapter_download > div {
+        background: rgba(30, 30, 30, 0.8);
+        border: 1px solid rgba(139, 69, 69, 0.2);
+    }
+    
+    .chapter_download > div:hover {
+        background: rgba(40, 40, 40, 0.9);
+        border-color: rgba(139, 69, 69, 0.4);
+    }
+    
+    .chapter_radio {
+        accent-color: #DC143C;
+    }
+    
+    .manga-page {
+        background: linear-gradient(135deg, 
+            #1a1a1a 0%, 
+            #2d2d2d 25%, 
+            #1f1f1f 50%, 
+            #252525 75%, 
+            #121212 100%);
+    }
+    
+    .manga-page::before {
+        background: 
+            radial-gradient(circle at 20% 50%, rgba(139, 0, 0, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(178, 34, 34, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(105, 105, 105, 0.1) 0%, transparent 50%);
+    }
+}
